@@ -5,19 +5,85 @@ let suits = ['0001', '0002', '0003', '0004', '0005', '0006',
 let newSuits = mixSuits(suits);
 let memory = document.getElementById('memory');
 let winText = document.getElementById('winText');
+let divScore = document.getElementById('score');
 let firstCard = null;
 let secondCard = null;
 let hasFlippedCard = false;
 let lockBoard = false;
 let countTries = 0;
 let countPairs = 0;
+let highScore = [{
+  barley_break: { gamerName: "highScore" },         //<==================== добавил
+  hangman: { gamerName: "highScore" },
+  memory: { Anakoliy: 52, Vaniliy: 45, Nitolay: 48 },
+}];
+let newHighScore = {
+  barley_break: { gamerName: "highScore" },         //<==================== добавил
+  hangman: { gamerName: "highScore" },
+  memory: {},
+}
+let keysSorted = [];  //<==================== добавил
+const SECRET_KEY = '$2a$10$5xA6OFP4qnNwimKo5/eK0eLoN60N/mcBIpajju/F4nxswjlvxe1Ti';
+const BIN_ID = '5c08228f1deea01014bdeca1';
 
+  function pushToHighscore (name, score){
+    highScore[0].memory[name] = (score);
+    return highScore[0].memory
+  }
+
+function toHighscoreDiv(arr) {                     //<==================== добавил
+  let newarr = arr;
+  for (let i=3; i < newarr.length; i -= 1) {
+    let span = document.createElement('span');
+    let br = document.createElement('br');
+    winText.append(span, br);
+    span.innerText =`${newarr[i]}: ${highScore[0].memory[newarr[i]]}`;
+    newHighScore.memory[newarr[i]] = (highScore[0].memory[newarr[i]]);
+  }
+}
+function sort() {          //<==================== добавил
+  let memory = highScore[0].memory
+  keysSorted = Object.keys(memory).sort((a, b) => memory[b] - memory[a]);
+}
+
+function putData(data) {            //<==================== добавил
+  return fetch(`https://api.jsonbin.io/b/${BIN_ID}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'secret-key': SECRET_KEY,
+      private: 'true',
+      name: 'OneAMinion',
+    },
+    body: JSON.stringify(data)
+  })
+};
+
+function getData() {  //<==================== добавил
+  return fetch(`https://api.jsonbin.io/b/${BIN_ID}/latest`, {
+    method: 'GET',
+    headers: {
+      'secret-key': SECRET_KEY,
+      private: 'true',
+    },
+  }).then(res => res.json())
+    .then(res => highScore.push(res))
+}
+
+function getScore() {  
+  let newHighScore = [...highScore];
+  for (let key of newHighScore) {
+   }
+divScore.innerText = `you did ${countTries} klick's`;
+}
+// window.postData = postData;
+// window.getData = getData;
+// window.putData = putData;
 
 function mixSuits(suits) {
   return suits.sort(() => { return .5 - Math.random() });
 }
 function createCards() {
-  // const newSuits = mixSuits(suits);
   newSuits.map((newSuits, i) => {
     let card = document.createElement('div');
     let img_front = document.createElement('img');
@@ -28,13 +94,13 @@ function createCards() {
     card.name = `${newSuits}`;
     memory.prepend(card);
     img_back.className = 'back';
-    img_back.src = `https://raw.githubusercontent.com/Boardonly/project1/master/images/${newSuits}.jpg`;
+    img_back.src = `https://raw.githubusercontent.com/Boardonly/images/master/images/${newSuits}.jpg`;
     img_front.className = 'front';
-    img_front.src = `https://raw.githubusercontent.com/Boardonly/project1/master/images/back.jpg`;
+    img_front.src = `https://raw.githubusercontent.com/Boardonly/images/master/images/back.jpg`;
     card.prepend(img_back, img_front);
   })
 }
-
+winText.innerText
 function flipCard() {
 
   if (lockBoard) return;
@@ -61,6 +127,7 @@ function unflipCard() {
 
 function matchCard() {
   countTries += 1;
+  getScore();
   if (firstCard.name === secondCard.name) {
     disableCards()
   } else {
@@ -85,9 +152,11 @@ function reset() {
 
 function win() {
   if (countPairs === 8) {
-    winText.innerHTML = `Ура. Это Победа за ${countTries} ${ends(countTries)}!!!`;
+    return true;
   }
+  return false;
 }
+
 function ends(countTries) {
   let count = countTries % 100;
   if (count >= 5 && count <= 20) {
